@@ -1,0 +1,150 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+<body>
+    <label>localVideo</label>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <label>remoteVideo</label>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <div>
+    <input id="msgInput" placeholder="메시지 입력...">
+    <button onclick="sendChat()">Send</button>
+    </div>
+    <div id="chatBox"></div>
+    <button onclick="startCall()">Start</button>
+
+<script>
+    // 영상 + 채팅 필드를 위한 변수
+    let localVideo = document.getElementById("localVideo"),
+        remoteVideo = document.getElementById("remoteVideo"),
+        chatBox = document.getElementById("chatBox"),
+        msgInput = document.getElementById("msgInput"),
+        localStream, peerConn, stomp;
+    const userId = Math.floor(Math.random() * 10000).toString(); // 임의의 사용자 ID 생성
+    let isCaller = false; // 초기값은 false로 설정
+
+    const servers = { iceServers: [{urls: "stun:stun.l.google.com:19302"}] };
+
+    function startCall(receiveOnly = false) {
+
+        if (receiveOnly) {
+            localStream = null; // 로컬 스트림 비우기
+            connectSocket();
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({video:true, audio:true})
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream;            
+            connectSocket();
+        })
+        .catch(err => {
+            if(err.name === 'NotReadableError') {
+                console.warn("startCall::카메라가 이미 사용 중입니다. receiveOnly 모드로 전환합니다.");
+                startCall(true);
+            } else {
+                alert("startCall::카메라 접근 오류: " + err.message);
+            }
+        });
+    }
+
+    function connectSocket() {
+        const sock = new SockJS('/ws');
+        stomp = Stomp.over(sock);
+        stomp.connect({}, () => {
+            stomp.subscribe('/topic/signals', msg => handleSignal(JSON.parse(msg.body)));
+            setTimeout(() => {
+                if(!peerConn){
+                    isCaller = true;
+                    createPeerConnection();
+                    makeOffer();
+                }
+            }, 1000);
+        });
+    }
+
+    function createPeerConnection(){
+        peerConn = new RTCPeerConnection(servers);
+
+        localStream.getTracks().forEach(track => {
+            peerConn.addTrack(track, localStream);
+        });
+
+        peerConn.ontrack = e => {
+            if (remoteVideo.srcObject !== e.streams[0]) {
+                remoteVideo.srcObject = e.streams[0];
+            }
+        };
+
+        peerConn.onicecandidate = e => {
+            if (e.candidate) {
+                stomp.send("/app/signal", {}, JSON.stringify({
+                    type: "candidate", 
+                    candidate: JSON.stringify(e.candidate),
+                    sender: userId
+                }));
+            }
+        };
+    }
+
+    function makeOffer(){
+        peerConn.createOffer().then(offer => {
+            peerConn.setLocalDescription(offer);
+            stomp.send("/app/signal", {}, JSON.stringify({
+                type: "offer", 
+                sdp: JSON.stringify(offer),
+                sender: userId
+            }));
+        }).catch(e => console.error("createOffer 오류:", e));
+    }
+
+    function handleSignal(d) {
+        if(d.sender === userId) {
+            console.log("handleSignal::Ignoring own message:", d);
+            return; // 자신의 메시지는 무시
+        }
+
+        if (!peerConn) createPeerConnection();
+
+        if (d.type === "offer") {
+            const offer = JSON.parse(d.sdp);
+            peerConn.setRemoteDescription(new RTCSessionDescription(offer));
+            peerConn.createAnswer().then(answer => {
+                peerConn.setLocalDescription(answer);
+                stomp.send("/app/signal", {}, JSON.stringify({
+                    type:"answer", 
+                    sdp: JSON.stringify(answer),
+                    sender: userId
+                }));
+            });
+        } else if (d.type === "answer") {
+            const answer = JSON.parse(d.sdp);
+            peerConn.setRemoteDescription(new RTCSessionDescription(answer));
+        } else if (d.type === "candidate") {
+            const candidate = JSON.parse(d.candidate);
+            peerConn.addIceCandidate(new RTCIceCandidate(candidate));
+        } else if (d.type === "chat") {
+            console.log("handleSignal::Received chat message:", d);
+            const content = d.content || "(빈 메시지)";
+            chatBox.innerHTML += `<div><b>${d.sender}:</b> ${content}</div>`;
+        }
+    }
+
+    function sendChat() {
+        console.log("sendChat::Sending chat message:", msgInput.value);
+        const msg = msgInput.value.trim();
+        if (!msg) return;
+
+        stomp.send("/app/signal", {}, JSON.stringify({
+            type:"chat", 
+            sender:"User", 
+            content: msg
+        }));
+        msgInput.value = "";
+    }
+</script>
+</body>
+</html>
