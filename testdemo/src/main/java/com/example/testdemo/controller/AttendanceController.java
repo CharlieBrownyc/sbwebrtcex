@@ -24,5 +24,15 @@ public class AttendanceController {
         
         return attendanceService.evaluateDailyAttendance(attendance);
     }
+
+    /*
+    POST /attendance/evaluate
+    Content-Type: application/json
+
+    {
+    "date": "2025-06-10",
+    "hoursAttended": 6.5
+    }
+     */
     
 }
