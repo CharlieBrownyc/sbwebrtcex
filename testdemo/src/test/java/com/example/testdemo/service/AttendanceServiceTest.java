@@ -99,6 +99,19 @@ public class AttendanceServiceTest {
         return new DailyAttendance(randomDate, hours);
     }
 
+    @Test
+    void shouldRecognizeAttendanceBasedOnHours() {
+        AttendanceService service = new AttendanceService();
+
+        DailyAttendance record1 = new DailyAttendance(LocalDate.now(), 6.5);
+        DailyAttendance record2 = new DailyAttendance(LocalDate.now(), 3.0);
+        DailyAttendance record3 = new DailyAttendance(LocalDate.now(), 5.5);
+
+        assertEquals(AttendanceStatus.PRESENT, service.evaluateDailyAttendance(record1), "Expected PRESENT for 6.5 hours");
+        assertEquals(AttendanceStatus.ABSENT, service.evaluateDailyAttendance(record2), "Expected ABSENT for 3.0 hours");
+        assertEquals(AttendanceStatus.LATE, service.evaluateDailyAttendance(record3), "Expected LATE for 5.5 hours");
+    }
+
     /*
     @Test
     public void testInsertDummies(){
