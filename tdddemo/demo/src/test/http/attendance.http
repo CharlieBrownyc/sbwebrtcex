@@ -1,0 +1,7 @@
+POST http://localhost:8080/attendance/evaluate
+Content-Type: application/json
+
+{
+  "date": "2025-06-15",
+  "hoursAttended": 6.4
+}
