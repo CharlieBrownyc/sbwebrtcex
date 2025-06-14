@@ -76,6 +76,7 @@ public class CarControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // Exception
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
     public class CarNotFoundException extends RuntimeException {
 
