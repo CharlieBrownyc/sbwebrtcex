@@ -1,0 +1,6 @@
+vapid:
+  publicKey: BFGBs_F5jhK0VrWRrEUsTnmjn6Dg00RyUcu1gKqOKCieZzJvhBsit7CGXvmX1ESOkRvVDaRCES02V83wdxYEtm0
+  privateKey: bh9fM35sMf1vnA7pHyoyhIswROxC4b1pECKKJ7EmRFU
+  subject: "mailto:your@email.com"
+server:
+  port: 8080

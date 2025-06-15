@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Web Push Demo</title>
+</head>
+<body>
+<h1>Web Push Demo</h1>
+<button id="btnSub">구독하기</button>
+<button id="btnSend">알림 보내기</button>
+
+<script th:inline="javascript">
+    const apiKey = /*[[ @{/api/push/key} ]]*/ '';
+    const subscribeUrl = /*[[ @{/api/push/subscribe} ]]*/ '';
+    const sendUrl = /*[[ @{/api/push/send} ]]*/ '';
+    if (Notification.permission !== 'granted') {
+        alert('알림 권한을 허용해주세요!');
+    }
+
+    document.getElementById('btnSub').onclick = async () => {
+        console.log('apiKey:',apiKey);
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(apiKey)
+        });
+        await fetch(subscribeUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub)
+        });
+        alert('구독 완료');
+    };
+
+    document.getElementById('btnSend').onclick = async () => {
+        const message = prompt('메시지 입력');
+        await fetch(sendUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        alert('알림 전송 완료');
+    };
+
+    // function urlBase64ToUint8Array(base64String) {
+    //     const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    //     const base64 = (base64String + padding)
+    //         .replace(/-/g, '+')
+    //         .replace(/_/g, '/')
+    //         .replace(/\s/g, ''); // ← 요거 추가
+    //
+    //     const rawData = atob(base64);
+    //     const outputArray = new Uint8Array(rawData.length);
+    //
+    //     for (let i = 0; i < rawData.length; ++i) {
+    //         outputArray[i] = rawData.charCodeAt(i);
+    //     }
+    //     return outputArray;
+    // }
+
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        console.log("padding:", padding);
+        console.log("base64String:", base64String);
+        const raw = atob((base64String + padding).replace(/-/g, '+').replace(/_/g, '/'));
+        return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+</script>
+</body>
+</html>
