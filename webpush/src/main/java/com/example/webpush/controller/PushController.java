@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/push")
 @RequiredArgsConstructor
-class PushController {
+public class PushController {
 
     private final WebPushService service;
 

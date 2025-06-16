@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(WebPushControllerTest.class)
 @Import(WebPushService.class)
-class WebPushControllerTest {
+public class WebPushControllerTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -45,6 +45,7 @@ class WebPushControllerTest {
 
     @Test
     void publicKeyEndpoint_returnsKey() throws Exception {
+        System.out.println("getPublicKey:" + webPushService.getPublicKey());
         Mockito.when(webPushService.getPublicKey()).thenReturn("PUBKEY");
         mockMvc.perform(get("/api/push/key"))
                 .andExpect(status().isOk())

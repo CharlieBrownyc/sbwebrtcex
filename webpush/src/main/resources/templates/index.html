@@ -7,11 +7,34 @@
 <h1>Web Push Demo</h1>
 <button id="btnSub">구독하기</button>
 <button id="btnSend">알림 보내기</button>
-
+<button type="button" id="notiwin" onclick="showNotification();">ui만 실행</button>
+<h1>SSE Demo</h1>
+<button onclick="sendMessage()">알림 보내기</button>
 <script th:inline="javascript">
-    const apiKey = /*[[ @{/api/push/key} ]]*/ '';
+    // SSE
+    const source = new EventSource('/sse/subscribe');
+
+    // Web Push
+    // const apiKey = /*[[ @{/api/push/key} ]]*/ '';
+    const apiKey = /*[[${apiKey}]]*/ '';
+    // const apiKey = await fetch('/api/push/key').then(res => res.text());
+
     const subscribeUrl = /*[[ @{/api/push/subscribe} ]]*/ '';
     const sendUrl = /*[[ @{/api/push/send} ]]*/ '';
+
+    source.onmessage = function(event) {
+        alert('서버로부터 메시지: ' + event.data);
+    };
+
+    function sendMessage() {
+        const message = prompt("보낼 메시지를 입력하세요:");
+        fetch('/sse/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+    }
+
     if (Notification.permission !== 'granted') {
         alert('알림 권한을 허용해주세요!');
     }
@@ -23,6 +46,7 @@
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(apiKey)
         });
+        console.log('sub:',sub);
         await fetch(subscribeUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -64,6 +88,22 @@
         console.log("base64String:", base64String);
         const raw = atob((base64String + padding).replace(/-/g, '+').replace(/_/g, '/'));
         return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    function showNotification() {
+        Notification.requestPermission(function(result) {
+            if (result === 'granted') {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification('알림 제목', {
+                        body: '알림 내용은 여기',
+                        icon: 'https://avatars.githubusercontent.com/u/20800279?v=4',
+                        vibrate: [200, 100, 200, 100, 200, 100, 200],
+                        tag: 'vibration-sample',
+                        data : 'http://www.naver.com'
+                    });
+                });
+            }
+        });
     }
 </script>
 </body>
