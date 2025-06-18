@@ -46,10 +46,13 @@ public class CarServiceTest {
 
     @Test
     public void getCarDetails() throws Exception {
+        // give
         given(carRepository.findByName("pulse")).willReturn(Optional.of(new Car("pulse","hatchback")));
 
+        // when
         Car car = carService.getCarDetails("pulse");
 
+        //
         assertNotNull(car);
         assertEquals("pulse", car.getName());
         assertEquals("hatchback", car.getType());

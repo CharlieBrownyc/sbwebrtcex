@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Redis Pub/Sub Chat</title>
+</head>
+<body>
+<h1>Redis Pub/Sub Chat Demo</h1>
+<form action="#" th:action="@{/send}" method="post">
+    <input type="text" name="message" placeholder="메시지 입력" required/>
+    <button type="submit">전송</button>
+</form>
+
+<div th:if="${msg}">
+    <p>방금 전송: <strong th:text="${msg}"></strong></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000   # 캐시 TTL: 10분
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  thymeleaf:
+    cache: false
+server:
+  port: 8080
