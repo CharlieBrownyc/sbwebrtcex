@@ -2,6 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Redis Pub/Sub Chat</title>
+    <script>
+        const eventSource = new EventSource("/sse/subscribe");
+        eventSource.onmessage = e => {
+            const msg = e.data;
+            console.log("알림 도착:", msg);
+            alert(msg);
+        };
+    </script>
 </head>
 <body>
 <h1>Redis Pub/Sub Chat Demo</h1>
