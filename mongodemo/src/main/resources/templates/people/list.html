@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <title></title>
+  <style>
+    .active {
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<h1>사람 목록</h1>
+<a th:href="@{/people/add}">User 추가</a>
+
+<table>
+    <tr><th>ID</th><th>Name</th><th>Age</th><th>기능</th></tr>
+    <tr th:each="p : ${people}">
+    <td th:text="${p.id}">ID</td>
+    <td th:text="${p.name}">Name</td>
+    <td th:text="${p.age}">Age</td>
+    <td>
+      <a th:href="@{|/people/edit/${p.id}|}">수정</a>
+      <form th:action="@{|/people/delete/${p.id}|}" method="post" style="display:inline">
+        <button type="submit">삭제</button>
+      </form>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <form th:action="@{/people/search}" method="get">
+                <input type="text" name="q" th:value="${q}" placeholder="이름 검색"/>
+                <button type="submit">검색</button>
+            </form>
+        </td>
+        <td>
+            <p th:if="${#lists.isEmpty(people)}">검색 결과가 없습니다.</p>
+        </td>
+    </tr>
+</table>
+<p th:if="${#lists.isEmpty(people)}">검색 결과가 없습니다.</p>
+<div>
+    <span th:if="${currentPage > 0}">
+        <a th:href="@{/people/search(q=${q}, page=${currentPage - 1})}">이전</a>
+    </span>
+    <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+        <a th:href="@{/people/search(q=${q}, page=${i})}"
+           th:text="${i + 1}"
+           th:class="${i == currentPage} ? 'active' : ''"></a>
+    </span>
+    <span th:if="${currentPage < totalPages - 1}">
+       <a th:href="@{/people/search(q=${q}, page=${currentPage + 1})}">다음</a>
+    </span>
+</div>
+</body></html>

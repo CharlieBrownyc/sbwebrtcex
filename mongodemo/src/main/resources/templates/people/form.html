@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<h1 th:text="${person.id} != null ? '수정' : '추가'">폼</h1>
+<form th:action="${person.id} != null ? '/people/edit/' + ${person.id} : '/people/add'" method="post" th:object="${person}">
+    <label>Name: <input th:field="*{name}"/></label><br/>
+    <label>Age: <input type="number" th:field="*{age}"/></label><br/>
+    <button type="submit">저장</button>
+</form>
+<a th:href="@{/people}">돌아가기</a>
+</body></html>
